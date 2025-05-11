@@ -1,0 +1,10 @@
+name: Cantar Envido
+description: Permite cantar Envido si no fue cantado aún
+priority: 2
+condition: jugador != null
+actions:
+  - jugador.puedeCantarEnvido = false
+  - if (!partida.envidoCantado) {
+    jugador.puedeCantarEnvido = true;
+    System.out.println(jugador.nombre + " puede cantar ENVIDO");
+    }

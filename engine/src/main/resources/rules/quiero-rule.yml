@@ -1,0 +1,8 @@
+# quiero-rule.yml
+name: "Quiero"
+description: "Permite aceptar un canto del oponente"
+priority: 10
+condition: "partida.trucoCantado || partida.envidoCantado || partida.florCantada"
+actions:
+  - "jugador.puedeQuerer = true;"
+  - "System.out.println(jugador.nombre + ' puede decir QUIERO');"

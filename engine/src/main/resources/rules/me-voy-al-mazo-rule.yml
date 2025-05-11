@@ -1,0 +1,7 @@
+name: "Irse al Mazo"
+description: "Permite al jugador irse al mazo en cualquier momento de la mano"
+priority: 8
+condition: "true"
+actions:
+  - "jugador.seVaAlMazo = true;"
+  - "System.out.println(jugador.nombre + ' se va al MAZO');"

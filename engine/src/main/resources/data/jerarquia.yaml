@@ -1,0 +1,37 @@
+# Cartas especiales (de mayor a menor)
+ESPADA_1: 14    # Ancho de espadas
+BASTO_1: 13     # Ancho de bastos
+ESPADA_7: 12    # Siete de espadas
+ORO_7: 11       # Siete de oro
+
+# Todos los 3 valen 10
+NUMERO_3: 10
+
+# Todos los 2 valen 9
+NUMERO_2: 9
+
+# Todos los 1 (excepto espadas y bastos) valen 8
+ORO_1: 8
+COPA_1: 8
+
+# Los 12 valen 7
+NUMERO_12: 7
+
+# Los 11 valen 6
+NUMERO_11: 6
+
+# Los 10 valen 5
+NUMERO_10: 5
+
+# Los 7 (excepto espadas y oro) valen 4
+COPA_7: 4
+BASTO_7: 4
+
+# Los 6 valen 3
+NUMERO_6: 3
+
+# Los 5 valen 2
+NUMERO_5: 2
+
+# Los 4 valen 1
+NUMERO_4: 1

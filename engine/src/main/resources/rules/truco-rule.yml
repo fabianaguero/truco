@@ -1,0 +1,10 @@
+name: Cantar Truco
+description: Permite cantar Truco si aún no fue cantado
+priority: 1
+condition: jugador != null
+actions:
+  - jugador.puedeCantarTruco = false
+  - if (!partida.trucoCantado) {
+    jugador.puedeCantarTruco = true;
+    System.out.println(jugador.nombre + " puede cantar TRUCO");
+    }

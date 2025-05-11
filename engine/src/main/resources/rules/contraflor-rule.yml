@@ -1,0 +1,11 @@
+name: Cantar Contraflor
+description: Permite cantar Contraflor cuando hay flor
+priority: 8
+condition: jugador != null
+actions:
+  - jugador.puedeCantarContraflor = false
+  - if (partida.florCantada) {
+    jugador.puedeCantarContraflor = true;
+    partida.contraflorCantada = true;
+    System.out.println(jugador.nombre + " puede cantar CONTRAFLOR");
+    }

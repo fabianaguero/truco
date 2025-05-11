@@ -1,0 +1,16 @@
+name: "Calcular Envido"
+description: "Calcula los puntos de envido del jugador"
+priority: 10
+condition: "jugador.mano != null && jugador.mano.size() >= 2"
+actions:
+  - >
+    int puntos = 0;
+    if (jugador.mano[0].palo == jugador.mano[1].palo) {
+      puntos = 20 + jugador.mano[0].valor + jugador.mano[1].valor;
+      if (jugador.mano.size() > 2 && jugador.mano[2].palo == jugador.mano[0].palo) {
+        puntos = Math.max(puntos, 20 + jugador.mano[0].valor + jugador.mano[2].valor);
+        puntos = Math.max(puntos, 20 + jugador.mano[1].valor + jugador.mano[2].valor);
+      }
+    }
+    jugador.puntosEnvido = puntos;
+  - "System.out.println(jugador.nombre + ' tiene ' + jugador.puntosEnvido + ' puntos de envido');"

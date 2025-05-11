@@ -1,0 +1,11 @@
+name: Contraflor al Resto
+description: Permite cantar Contraflor al Resto cuando ya se cantó contraflor
+priority: 8
+condition: jugador != null
+actions:
+  - jugador.puedeCantarContraflorAlResto = false
+  - if (partida.contraflorCantada && !partida.contraflorAlRestoCantada) {
+    jugador.puedeCantarContraflorAlResto = true;
+    partida.contraflorAlRestoCantada = true;
+    System.out.println(jugador.nombre + " puede cantar CONTRAFLOR AL RESTO");
+    }

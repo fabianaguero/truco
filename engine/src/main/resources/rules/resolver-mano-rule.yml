@@ -1,0 +1,6 @@
+name: "Resolver Mano"
+description: "Determina el ganador de la mano según las cartas jugadas"
+priority: 9
+condition: "cartasJugadas.size() == ordenDeTurno.size()"
+actions:
+  - "System.out.println('Se resolvió la mano y se asignaron los puntos correspondientes');"

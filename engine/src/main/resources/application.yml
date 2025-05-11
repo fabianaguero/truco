@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: engine
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/trucodb
+    username: trucouser
+    password: trucopass
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 25
+          fetch_size: 50
+        transaction:
+          flush_before_completion: true
+        enable_lazy_load_no_trans: true
+        globally_quoted_identifiers: true
+    show-sql: true
+    open-in-view: false
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: always
+    timeout: 30m
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+      fabiano:
+        tfg:
+          engine: DEBUG
+
+server:
+  error:
+    include-stacktrace: never
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha

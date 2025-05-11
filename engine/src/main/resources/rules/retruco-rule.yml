@@ -1,0 +1,7 @@
+name: "Cantar Retruco"
+description: "Permite cantar Retruco si ya se cantó Truco y no se ha cantado Retruco"
+priority: 2
+condition: "partida.trucoCantado && !partida.retrucoCantado"
+actions:
+  - "jugador.puedeCantarRetruco = true;"
+  - "System.out.println(jugador.nombre + ' puede cantar RETRUCO');"

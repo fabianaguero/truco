@@ -1,0 +1,7 @@
+name: "Cantar Real Envido"
+description: "Permite cantar Real Envido si aún no se ha cantado en la mano actual"
+priority: 5
+condition: "!partida.realEnvidoCantado"
+actions:
+  - "jugador.puedeCantarRealEnvido = true;"
+  - "System.out.println(jugador.nombre + ' puede cantar REAL ENVIDO');"

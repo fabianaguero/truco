@@ -1,0 +1,8 @@
+# no-quiero-rule.yml
+name: "No Quiero"
+description: "Permite rechazar un canto del oponente"
+priority: 10
+condition: "partida.trucoCantado || partida.envidoCantado || partida.florCantada"
+actions:
+  - "jugador.puedeNoQuerer = true;"
+  - "System.out.println(jugador.nombre + ' puede decir NO QUIERO');"

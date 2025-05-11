@@ -1,0 +1,7 @@
+name: "Cantar Falta Envido"
+description: "Permite cantar Falta Envido si aún no se ha cantado en la mano actual"
+priority: 6
+condition: "!partida.faltaEnvidoCantado"
+actions:
+  - "jugador.puedeCantarFaltaEnvido = true;"
+  - "System.out.println(jugador.nombre + ' puede cantar FALTA ENVIDO');"

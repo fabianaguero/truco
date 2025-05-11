@@ -1,0 +1,24 @@
+name: "Resolver Ronda"
+description: "Determina la carta ganadora de la ronda comparando jerarquía"
+priority: 100
+condition: "cartasJugadas.size() == ordenDeTurno.size()"
+actions:
+  - >
+    int i = 0;
+    jugada = cartasJugadas.get(i);
+    mejorJugada = jugada;
+    mejorValor = jerarquia.containsKey(jugada.carta.palo + '_' + jugada.carta.valor) ? 
+      jerarquia.get(jugada.carta.palo + '_' + jugada.carta.valor) : 
+      jerarquia.get('NUMERO_' + jugada.carta.valor);
+    while (++i < cartasJugadas.size()) {
+      jugada = cartasJugadas.get(i);
+      valorActual = jerarquia.containsKey(jugada.carta.palo + '_' + jugada.carta.valor) ? 
+        jerarquia.get(jugada.carta.palo + '_' + jugada.carta.valor) : 
+        jerarquia.get('NUMERO_' + jugada.carta.valor);
+      if (valorActual > mejorValor) {
+        mejorJugada = jugada;
+        mejorValor = valorActual;
+      }
+    }
+  - "System.out.println('Carta ganadora de la ronda: ' + mejorJugada.carta.descripcion());"
+  - "partida.ganadorDeRonda = mejorJugada.jugador.equipo;"

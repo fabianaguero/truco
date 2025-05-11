@@ -1,0 +1,60 @@
+@startuml
+title Arquitectura del Sistema: Juego de Truco con IA en Java
+
+actor Usuario
+
+package "Frontend Web" {
+  component "UI del Juego" as UI
+  component "WebSocket JS" as WSClient
+}
+
+package "Backend Spring Boot" {
+  component "Controlador REST / WS" as Controller
+  component "Motor de Juego (Turnos, Reglas)" as GameEngine
+  component "Gestor de Partidas / Equipos" as MatchManager
+  component "Servicio IA (Frases y Decisiones)" as TrucoAIService
+  component "Administrador de Jugadores" as PlayerManager
+}
+
+package "IA LLM" {
+  [Servidor LLM local/API externa] as LLM
+}
+
+database "Base de Datos" as DB
+
+package "Servicios Futuros" {
+  component "Síntesis de Voz (TTS)" as TTS
+  component "Integraciones (Discord, etc.)" as Integrations
+}
+
+Usuario --> UI
+UI --> WSClient
+WSClient --> Controller : WebSocket
+Controller --> GameEngine : turnos, jugadas
+Controller --> PlayerManager : crear usuario, elegir pareja
+Controller --> MatchManager : iniciar partida
+
+GameEngine --> TrucoAIService : si turno de bot
+TrucoAIService --> LLM : prompt con contexto
+LLM --> TrucoAIService : jugada o frase
+TrucoAIService --> GameEngine : acción sugerida
+
+GameEngine --> DB : guardar estado, puntajes
+PlayerManager --> DB : registrar usuario
+MatchManager --> DB : crear/leer partidas
+
+Controller --> UI : actualizaciones
+Controller --> TTS : (opcional) texto a voz
+
+note right of LLM
+ Puede ser un servicio local
+ (por ejemplo, con DJL o Flask + Huggingface)
+ o una API gratuita como Hugging Face
+end note
+
+note right of TTS
+ En futuro se puede usar Google TTS,
+ Coqui TTS, eSpeak, etc.
+end note
+
+@enduml

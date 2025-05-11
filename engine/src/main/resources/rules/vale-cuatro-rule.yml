@@ -1,0 +1,7 @@
+name: "Cantar Vale Cuatro"
+description: "Permite cantar Vale Cuatro si ya se cantó Retruco y no se ha cantado Vale Cuatro"
+priority: 3
+condition: "partida.retrucoCantado && !partida.valeCuatroCantado"
+actions:
+  - "jugador.puedeCantarValeCuatro = true;"
+  - "System.out.println(jugador.nombre + ' puede cantar VALE CUATRO');"

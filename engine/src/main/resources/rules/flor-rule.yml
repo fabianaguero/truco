@@ -1,0 +1,12 @@
+name: Cantar Flor
+description: Permite cantar Flor si tiene tres cartas del mismo palo
+priority: 7
+condition: jugador != null && jugador.mano != null && jugador.mano.size() == 3
+actions:
+  - jugador.puedeCantarFlor = false
+  - if (jugador.mano.get(0).palo == jugador.mano.get(1).palo &&
+    jugador.mano.get(0).palo == jugador.mano.get(2).palo) {
+    jugador.puedeCantarFlor = true;
+    partida.florCantada = true;
+    System.out.println(jugador.nombre + " puede cantar FLOR");
+    }
