@@ -1,7 +1,5 @@
 package org.fabiano.tfg.engine.model;
 
-import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.fabiano.tfg.engine.model.team.Equipo;
 import org.fabiano.tfg.engine.model.team.Jugador;

@@ -1,7 +1,6 @@
 package org.fabiano.tfg.engine.dto;
 
 
-
 import lombok.Data;
 import org.fabiano.tfg.engine.model.team.Equipo;
 import org.fabiano.tfg.engine.model.team.Jugador;
@@ -22,8 +21,8 @@ public class EquipoResponse {
         this.nombre = equipo.getNombre();
         this.puntaje = equipo.getPuntaje();
         this.jugadores = equipo.getJugadores().stream()
-            .map(JugadorDTO::new)
-            .collect(Collectors.toList());
+                .map(JugadorDTO::new)
+                .collect(Collectors.toList());
     }
 
     @Data

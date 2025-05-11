@@ -70,6 +70,7 @@ public class Partida {
 
     @Version
     private Long version;
+
     public void agregarCartaJugada(String jugadorNombre, Carta carta) {
         Jugada jugada = new Jugada(
                 jugadorNombre,
