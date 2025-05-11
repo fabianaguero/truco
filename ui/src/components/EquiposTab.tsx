@@ -10,6 +10,10 @@ const EquiposTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
+  const jugadoresValidos = jugadores.filter(
+      (j): j is Jugador => j && j.id !== undefined && j.nombre !== undefined
+  );
+
   const columns = [
     {
       title: 'Nombre',
@@ -21,10 +25,10 @@ const EquiposTab: React.FC = () => {
       key: 'jugadores',
       render: (_: any, record: Equipo) => (
           <span>
-          {record.jugadores?.map(j => (
-              <span key={j.id}>
+          {record.jugadores?.map((j, index) => (
+              <span key={j.id || `${record.id}-jugador-${index}`}>
               {j.nombre}
-                {record.jugadores?.indexOf(j) === (record.jugadores?.length ?? 0) - 1 ? '' : ', '}
+                {index < (record.jugadores?.length ?? 0) - 1 ? ', ' : ''}
             </span>
           )) || 'Sin jugadores'}
         </span>
@@ -82,13 +86,28 @@ const EquiposTab: React.FC = () => {
   };
 
   const handleEditar = async (equipo: Equipo) => {
-    await cargarJugadores();
-    form.setFieldsValue({
-      id: equipo.id,
-      nombre: equipo.nombre,
-      jugadores: equipo.jugadores?.map(j => j.id) || []
-    });
-    setModalVisible(true);
+    setLoading(true);
+    try {
+      const response = await jugadorService.listar();
+      setJugadores(response.data);
+
+      const jugadoresFormateados = equipo.jugadores?.map(j => ({
+        value: j.id,
+        label: j.nombre
+      })) || [];
+
+      form.setFieldsValue({
+        id: equipo.id,
+        nombre: equipo.nombre,
+        jugadores: jugadoresFormateados
+      });
+
+      setModalVisible(true);
+    } catch (error) {
+      message.error('Error al cargar jugadores');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEliminar = async (id: string) => {
@@ -105,6 +124,7 @@ const EquiposTab: React.FC = () => {
     setLoading(true);
     try {
       let equipoId = values.id;
+
       if (equipoId) {
         await equipoService.actualizar(equipoId, { nombre: values.nombre });
       } else {
@@ -112,18 +132,22 @@ const EquiposTab: React.FC = () => {
         equipoId = res.data.id;
       }
 
-      // Actualizar asociación de jugadores
-      const jugadoresSeleccionados: string[] = values.jugadores || [];
-      const equipoActual = equipos.find(e => e.id === equipoId) || { jugadores: [] };
-      const jugadoresActuales = equipoActual.jugadores?.map(j => j.id) || [];
+      // ⚠️ Extraer solo los IDs válidos desde labelInValue
+      const jugadoresSeleccionados: string[] = (values.jugadores || [])
+          .filter((j: any) => typeof j === 'object' && j.value)
+          .map((j: any) => String(j.value));
 
-      // Asociar nuevos jugadores
+      console.log("Jugadores a asignar:", jugadoresSeleccionados);
+
+      const equipoActual = equipos.find(e => e.id === equipoId) || { jugadores: [] };
+      const jugadoresActuales = equipoActual.jugadores?.map(j => String(j.id)) || [];
+
       for (const jugadorId of jugadoresSeleccionados) {
         if (!jugadoresActuales.includes(jugadorId)) {
           await equipoService.asignarJugadorAEquipo(equipoId, jugadorId);
         }
       }
-      // Remover jugadores desasociados
+
       for (const jugadorId of jugadoresActuales) {
         if (!jugadoresSeleccionados.includes(jugadorId)) {
           await equipoService.removerJugadorDeEquipo(equipoId, jugadorId);
@@ -135,6 +159,7 @@ const EquiposTab: React.FC = () => {
       form.resetFields();
       await cargarDatos();
     } catch (error) {
+      console.error("Error en onFinish:", error);
       message.error('Error al guardar el equipo');
     } finally {
       setLoading(false);
@@ -178,18 +203,16 @@ const EquiposTab: React.FC = () => {
               <Input />
             </Form.Item>
 
-            <Form.Item
-                name="jugadores"
-                label="Jugadores"
-            >
+            <Form.Item name="jugadores" label="Jugadores">
               <Select
                   mode="multiple"
+                  labelInValue
                   showSearch
+                  optionFilterProp="children"
                   placeholder="Selecciona jugadores"
-                  optionFilterProp="label"
               >
-                {jugadores.map(j => (
-                    <Select.Option key={j.id} value={j.id} label={j.nombre}>
+                {jugadoresValidos.map(j => (
+                    <Select.Option key={j.id} value={j.id}>
                       {j.nombre}
                     </Select.Option>
                 ))}

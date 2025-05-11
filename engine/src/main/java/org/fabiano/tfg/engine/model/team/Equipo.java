@@ -19,9 +19,16 @@ public class Equipo {
 
     private String nombre;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "equipo_jugadores",
+            joinColumns = @JoinColumn(name = "equipo_id"),
+            inverseJoinColumns = @JoinColumn(name = "jugador_id"),
+            uniqueConstraints = {
+                    @UniqueConstraint(columnNames = {"equipo_id", "jugador_id"})
+            }
+    )
     private List<Jugador> jugadores;
-
     private int puntaje;
 
     public Equipo(String nombre, List<Jugador> jugadores, int puntaje) {
