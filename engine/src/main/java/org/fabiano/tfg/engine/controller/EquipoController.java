@@ -104,8 +104,12 @@ public class EquipoController {
         Equipo equipo = equipoOpt.get();
         Jugador jugador = jugadorOpt.get();
 
-        if (existeJugadorEnEquipo(equipo, jugador.getNombre())) {
+        if (existeJugadorEnEquipo(equipo, jugador.getId())) {
             return ResponseEntity.badRequest().build();
+        }
+
+        if (equipo.getJugadores() == null) {
+            equipo.setJugadores(new ArrayList<>());
         }
 
         equipo.getJugadores().add(jugador);
@@ -135,8 +139,9 @@ public class EquipoController {
         return ResponseEntity.ok(new EquipoResponse(equipo));
     }
 
-    private boolean existeJugadorEnEquipo(Equipo equipo, String nombreJugador) {
+    // Cambiado: ahora compara por ID
+    private boolean existeJugadorEnEquipo(Equipo equipo, UUID jugadorId) {
         return equipo.getJugadores().stream()
-                .anyMatch(j -> j.getNombre().equals(nombreJugador));
+                .anyMatch(j -> j.getId().equals(jugadorId));
     }
 }
