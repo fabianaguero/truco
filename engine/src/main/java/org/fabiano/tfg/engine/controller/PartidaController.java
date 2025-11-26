@@ -48,7 +48,10 @@ public class PartidaController {
         if (partidaOpt.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(partidaOpt.get(), HttpStatus.OK);
+        Partida partida = partidaOpt.get();
+        // Reconstruir el orden de turno si es necesario
+        partidaService.reconstruirOrdenDeTurno(partida);
+        return new ResponseEntity<>(partida, HttpStatus.OK);
     }
 
     @PostMapping("/{id}/cantar/truco")
@@ -59,6 +62,8 @@ public class PartidaController {
         }
 
         Partida partida = partidaOpt.get();
+        partidaService.reconstruirOrdenDeTurno(partida);
+        
         Jugador jugador = encontrarJugador(partida, jugadorNombre);
         if (jugador == null) {
             return new ResponseEntity<>("Jugador no encontrado", HttpStatus.BAD_REQUEST);
@@ -85,6 +90,8 @@ public class PartidaController {
         }
 
         Partida partida = partidaOpt.get();
+        partidaService.reconstruirOrdenDeTurno(partida);
+        
         Jugador jugador = encontrarJugador(partida, jugadorNombre);
         if (jugador == null) {
             return new ResponseEntity<>("Jugador no encontrado", HttpStatus.BAD_REQUEST);
@@ -114,18 +121,32 @@ public class PartidaController {
         }
 
         Partida partida = partidaOpt.get();
+        // Reconstruir el orden de turno si es necesario
+        partidaService.reconstruirOrdenDeTurno(partida);
+
         Jugador jugador = encontrarJugador(partida, jugadorNombre);
         if (jugador == null || indiceCarta < 0 || indiceCarta >= jugador.getMano().size()) {
             return new ResponseEntity<>("Jugador o carta inválida", HttpStatus.BAD_REQUEST);
         }
 
-        yamlRuleLoader.ejecutarTodas(jugador, partida);
-        Carta carta = jugador.getMano().get(indiceCarta);
-        partidaService.registrarJugada(partida, jugador, carta);
-        partidaRepository.save(partida);
-        log.info("Jugador {} jugó carta {} en partida {}",
-                jugador.getNombre(), carta, partida.getId());
-        return new ResponseEntity<>(jugador.getNombre() + " jugó: " + carta, HttpStatus.OK);
+        // Validar que es el turno del jugador
+        if (!partida.esTurnoDeJugador(jugador)) {
+            return new ResponseEntity<>("No es tu turno. Turno actual: " + 
+                    partida.getJugadorActual().getNombre(), HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            yamlRuleLoader.ejecutarTodas(jugador, partida);
+            Carta carta = jugador.getMano().get(indiceCarta);
+            partidaService.registrarJugada(partida, jugador, carta);
+            partidaRepository.save(partida);
+            log.info("Jugador {} jugó carta {} en partida {}",
+                    jugador.getNombre(), carta, partida.getId());
+            return new ResponseEntity<>(jugador.getNombre() + " jugó: " + carta, HttpStatus.OK);
+        } catch (IllegalStateException e) {
+            log.warn("Error al jugar carta: {}", e.getMessage());
+            return new ResponseEntity<>("No se puede realizar esta acción en este momento", HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PostMapping("/{id}/querer")
@@ -136,6 +157,8 @@ public class PartidaController {
         }
 
         Partida partida = partidaOpt.get();
+        partidaService.reconstruirOrdenDeTurno(partida);
+        
         Jugador jugador = encontrarJugador(partida, jugadorNombre);
         if (jugador == null) {
             return new ResponseEntity<>("Jugador no encontrado", HttpStatus.BAD_REQUEST);
@@ -161,6 +184,8 @@ public class PartidaController {
         }
 
         Partida partida = partidaOpt.get();
+        partidaService.reconstruirOrdenDeTurno(partida);
+        
         Jugador jugador = encontrarJugador(partida, jugadorNombre);
         if (jugador == null) {
             return new ResponseEntity<>("Jugador no encontrado", HttpStatus.BAD_REQUEST);
@@ -186,6 +211,8 @@ public class PartidaController {
         }
 
         Partida partida = partidaOpt.get();
+        partidaService.reconstruirOrdenDeTurno(partida);
+        
         Jugador jugador = encontrarJugador(partida, jugadorNombre);
         if (jugador == null) {
             return new ResponseEntity<>("Jugador no encontrado", HttpStatus.BAD_REQUEST);
@@ -213,6 +240,8 @@ public class PartidaController {
         }
 
         Partida partida = partidaOpt.get();
+        partidaService.reconstruirOrdenDeTurno(partida);
+        
         Jugador jugador = encontrarJugador(partida, jugadorNombre);
         if (jugador == null) {
             return new ResponseEntity<>("Jugador no encontrado", HttpStatus.BAD_REQUEST);
@@ -222,8 +251,9 @@ public class PartidaController {
         Map<String, Object> response = new HashMap<>();
         response.put("jugador", jugador.getNombre());
         response.put("cartas", jugador.getMano());
-        response.put("turnoActual", partida.getOrdenDeTurno().peek());
-        response.put("esMiTurno", jugador.getNombre().equals(partida.getOrdenDeTurno().peek()));
+        Jugador jugadorActual = partida.getJugadorActual();
+        response.put("turnoActual", jugadorActual != null ? jugadorActual.getNombre() : null);
+        response.put("esMiTurno", partida.esTurnoDeJugador(jugador));
         response.put("estadoRonda", partida.getEstadoRonda());
         response.put("cartasJugadas", partida.getCartasJugadas());
         response.put("puntosEquipo1", partida.getEquipos().get(0).getPuntaje());

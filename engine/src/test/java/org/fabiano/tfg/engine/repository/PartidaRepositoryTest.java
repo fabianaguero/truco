@@ -35,12 +35,16 @@ class PartidaRepositoryTest {
         Carta carta = new Carta(Palo.ESPADA, 1);
         carta = entityManager.persist(carta);
 
-        // Crear jugadores y equipos
+        // Crear y persistir jugadores primero
         Jugador jugador1 = new Jugador("Jugador1", false, false, false, false, false,
                 false, false, false, false, false, false, false, 0, new ArrayList<>());
         Jugador jugador2 = new Jugador("Jugador2", false, false, false, false, false,
                 false, false, false, false, false, false, false, 0, new ArrayList<>());
+        
+        jugador1 = entityManager.persist(jugador1);
+        jugador2 = entityManager.persist(jugador2);
 
+        // Crear equipos con jugadores persistidos
         Equipo equipo1 = new Equipo("Equipo1", new ArrayList<>(), 0);
         Equipo equipo2 = new Equipo("Equipo2", new ArrayList<>(), 0);
 
