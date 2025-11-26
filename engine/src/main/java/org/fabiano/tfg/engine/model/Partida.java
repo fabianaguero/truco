@@ -85,6 +85,9 @@ public class Partida {
     }
 
     public List<Jugada> getCartasJugadasEnVueltaActual() {
+        if (this.cartasJugadas == null) {
+            return new ArrayList<>();
+        }
         return this.cartasJugadas.stream()
                 .filter(j -> j.getNumeroVuelta() == this.vuelta &&
                         j.getNumeroRonda() == this.ronda)
@@ -99,8 +102,11 @@ public class Partida {
      * Obtiene el número total de jugadores en la partida.
      */
     public int getTotalJugadores() {
+        if (equipos == null) {
+            return 0;
+        }
         return equipos.stream()
-                .mapToInt(e -> e.getJugadores().size())
+                .mapToInt(e -> e.getJugadores() != null ? e.getJugadores().size() : 0)
                 .sum();
     }
 
@@ -116,9 +122,22 @@ public class Partida {
 
     /**
      * Verifica si es el turno del jugador especificado.
+     * Compara por ID si está disponible, de lo contrario por nombre.
      */
     public boolean esTurnoDeJugador(Jugador jugador) {
+        if (jugador == null) {
+            return false;
+        }
         Jugador actual = getJugadorActual();
-        return actual != null && actual.getNombre().equalsIgnoreCase(jugador.getNombre());
+        if (actual == null) {
+            return false;
+        }
+        // Prefer ID comparison if both IDs are available
+        if (actual.getId() != null && jugador.getId() != null) {
+            return actual.getId().equals(jugador.getId());
+        }
+        // Fallback to name comparison
+        return actual.getNombre() != null && 
+               actual.getNombre().equalsIgnoreCase(jugador.getNombre());
     }
 }

@@ -144,7 +144,8 @@ public class PartidaController {
                     jugador.getNombre(), carta, partida.getId());
             return new ResponseEntity<>(jugador.getNombre() + " jugó: " + carta, HttpStatus.OK);
         } catch (IllegalStateException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            log.warn("Error al jugar carta: {}", e.getMessage());
+            return new ResponseEntity<>("No se puede realizar esta acción en este momento", HttpStatus.BAD_REQUEST);
         }
     }
 
