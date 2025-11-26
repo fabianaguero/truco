@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Layout, Tabs, Spin, message } from 'antd';
 import JugadoresTab from './components/JugadoresTab';
 import EquiposTab from './components/EquiposTab';
+import GameBoard from './components/GameBoard';
 import { equipoService, jugadorService } from './services/api';
 
 const { Header, Content } = Layout;
@@ -43,6 +44,11 @@ const App: React.FC = () => {
             key: '2',
             label: 'Equipos',
             children: <EquiposTab />
+        },
+        {
+            key: '3',
+            label: 'Mesa de Juego',
+            children: <GameBoard />
         }
     ];
 
@@ -54,7 +60,7 @@ const App: React.FC = () => {
     return (
         <Layout style={{ minHeight: '100vh' }}>
             <Header style={{ background: '#fff', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1>Gestión de Jugadores y Equipos</h1>
+                <h1>Gestión de Jugadores y Equipos - Truco</h1>
                 {loading && <Spin />}
             </Header>
             <Content style={{ padding: '24px' }}>

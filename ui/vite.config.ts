@@ -12,6 +12,11 @@ export default defineConfig({
                 changeOrigin: true,
                 secure: false,
                 rewrite: path => path // No cambia el path
+            },
+            '/ws': {
+                target: 'ws://localhost:8080',
+                ws: true,
+                changeOrigin: true
             }
         }
     }
