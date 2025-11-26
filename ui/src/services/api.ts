@@ -127,9 +127,5 @@ export const gameService = {
     
     // Create a new partida
     crearPartida: (request: CrearPartidaRequest) =>
-        axiosInstance.post<string>('/partidas', request),
-    
-    // List available equipos for game creation
-    listarEquipos: () =>
-        axiosInstance.get<Equipo[]>('/equipos')
+        axiosInstance.post<string>('/partidas', request)
 };
