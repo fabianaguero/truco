@@ -56,7 +56,7 @@ export interface ManoJugador {
 
 // WebSocket message types
 export interface WebSocketMessage {
-  type: 'PARTIDA_UPDATE' | 'CARTA_JUGADA' | 'TRUCO_CANTADO' | 'ENVIDO_CANTADO' | 'TURNO_CAMBIO';
+  type: 'PARTIDA_UPDATE' | 'CARTA_JUGADA' | 'TRUCO_CANTADO' | 'ENVIDO_CANTADO' | 'TURNO_CAMBIO' | 'QUISO' | 'NO_QUISO' | 'AL_MAZO';
   payload: PartidaState | Jugada | string;
   partidaId: string;
 }

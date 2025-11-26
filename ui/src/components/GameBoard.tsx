@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card as AntCard, Button, Space, Typography, Row, Col, message, Spin, Alert, Input, Modal, Form } from 'antd';
 import { ReloadOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import CardComponent from './Card';
@@ -22,6 +22,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ partidaId: propPartidaId, jugador
   const [wsConnected, setWsConnected] = useState(false);
   const [modalVisible, setModalVisible] = useState(true);
   const [form] = Form.useForm();
+  const wsConnectedRef = useRef(false);
 
   const fetchGameState = useCallback(async () => {
     if (!partidaId || !jugadorNombre) return;
@@ -51,10 +52,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ partidaId: propPartidaId, jugador
   useEffect(() => {
     if (partidaId && jugadorNombre) {
       webSocketService.connect(partidaId, handleWebSocketMessage)
-        .then(() => setWsConnected(true))
+        .then(() => {
+          setWsConnected(true);
+          wsConnectedRef.current = true;
+        })
         .catch(() => {
           console.warn('WebSocket connection failed, using polling');
           setWsConnected(false);
+          wsConnectedRef.current = false;
         });
 
       fetchGameState();
@@ -62,6 +67,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ partidaId: propPartidaId, jugador
       return () => {
         webSocketService.disconnect();
         setWsConnected(false);
+        wsConnectedRef.current = false;
       };
     }
   }, [partidaId, jugadorNombre, handleWebSocketMessage, fetchGameState]);
@@ -98,7 +104,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ partidaId: propPartidaId, jugador
     try {
       await gameService.jugarCarta(partidaId, jugadorNombre, selectedCardIndex);
       setSelectedCardIndex(null);
-      await fetchGameState();
+      // Only fetch manually if WebSocket is not connected
+      if (!wsConnectedRef.current) {
+        await fetchGameState();
+      }
       message.success('Carta jugada');
     } catch (error) {
       console.error('Error playing card:', error);
@@ -112,7 +121,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ partidaId: propPartidaId, jugador
     setLoading(true);
     try {
       await gameService.cantarTruco(partidaId, jugadorNombre);
-      await fetchGameState();
+      // Only fetch manually if WebSocket is not connected
+      if (!wsConnectedRef.current) {
+        await fetchGameState();
+      }
       message.success('¡Truco!');
     } catch (error) {
       console.error('Error calling truco:', error);
@@ -126,7 +138,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ partidaId: propPartidaId, jugador
     setLoading(true);
     try {
       await gameService.cantarEnvido(partidaId, jugadorNombre);
-      await fetchGameState();
+      // Only fetch manually if WebSocket is not connected
+      if (!wsConnectedRef.current) {
+        await fetchGameState();
+      }
       message.success('¡Envido!');
     } catch (error) {
       console.error('Error calling envido:', error);
@@ -140,7 +155,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ partidaId: propPartidaId, jugador
     setLoading(true);
     try {
       await gameService.querer(partidaId, jugadorNombre);
-      await fetchGameState();
+      // Only fetch manually if WebSocket is not connected
+      if (!wsConnectedRef.current) {
+        await fetchGameState();
+      }
       message.success('¡Quiero!');
     } catch (error) {
       console.error('Error accepting:', error);
@@ -154,7 +172,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ partidaId: propPartidaId, jugador
     setLoading(true);
     try {
       await gameService.noQuerer(partidaId, jugadorNombre);
-      await fetchGameState();
+      // Only fetch manually if WebSocket is not connected
+      if (!wsConnectedRef.current) {
+        await fetchGameState();
+      }
       message.info('No quiero');
     } catch (error) {
       console.error('Error declining:', error);
@@ -168,7 +189,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ partidaId: propPartidaId, jugador
     setLoading(true);
     try {
       await gameService.irseAlMazo(partidaId, jugadorNombre);
-      await fetchGameState();
+      // Only fetch manually if WebSocket is not connected
+      if (!wsConnectedRef.current) {
+        await fetchGameState();
+      }
       message.info('Te fuiste al mazo');
     } catch (error) {
       console.error('Error going to mazo:', error);

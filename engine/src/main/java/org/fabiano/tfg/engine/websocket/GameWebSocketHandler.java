@@ -9,10 +9,13 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
@@ -21,6 +24,9 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // Map partidaId -> Set of connected sessions
     private final Map<String, Set<WebSocketSession>> partidaSessions = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    
+    // Pattern to extract partidaId from the WebSocket path
+    private static final Pattern PARTIDA_PATH_PATTERN = Pattern.compile("/ws/partida/([a-fA-F0-9-]+)");
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -79,10 +85,21 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
 
     private String extractPartidaId(WebSocketSession session) {
-        String path = session.getUri() != null ? session.getUri().getPath() : null;
-        if (path != null && path.contains("/ws/partida/")) {
-            return path.substring(path.lastIndexOf("/") + 1);
+        URI uri = session.getUri();
+        if (uri == null) {
+            return null;
         }
+        
+        String path = uri.getPath();
+        if (path == null) {
+            return null;
+        }
+        
+        Matcher matcher = PARTIDA_PATH_PATTERN.matcher(path);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        
         return null;
     }
 }

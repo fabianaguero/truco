@@ -9,6 +9,7 @@ class WebSocketService {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 3000;
   private partidaId: string | null = null;
+  private isManuallyDisconnected = false;
 
   private getWebSocketUrl(partidaId: string): string {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -20,6 +21,7 @@ class WebSocketService {
     return new Promise((resolve, reject) => {
       this.partidaId = partidaId;
       this.messageHandler = onMessage;
+      this.isManuallyDisconnected = false;
 
       try {
         const url = this.getWebSocketUrl(partidaId);
@@ -70,17 +72,20 @@ class WebSocketService {
   }
 
   private handleReconnect(): void {
-    if (this.reconnectAttempts < this.maxReconnectAttempts && this.partidaId && this.messageHandler) {
+    if (!this.isManuallyDisconnected && 
+        this.reconnectAttempts < this.maxReconnectAttempts && 
+        this.partidaId && 
+        this.messageHandler) {
       this.reconnectAttempts++;
       console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
       
       setTimeout(() => {
-        if (this.partidaId && this.messageHandler) {
+        if (this.partidaId && this.messageHandler && !this.isManuallyDisconnected) {
           this.connect(this.partidaId, this.messageHandler).catch(console.error);
         }
       }, this.reconnectDelay);
     } else {
-      console.log('Max reconnect attempts reached');
+      console.log('Max reconnect attempts reached or manually disconnected');
     }
   }
 
@@ -93,13 +98,13 @@ class WebSocketService {
   }
 
   disconnect(): void {
+    this.isManuallyDisconnected = true;
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
     this.partidaId = null;
     this.messageHandler = null;
-    this.reconnectAttempts = this.maxReconnectAttempts; // Prevent reconnection
   }
 
   isConnected(): boolean {
