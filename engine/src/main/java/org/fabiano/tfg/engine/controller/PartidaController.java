@@ -26,6 +26,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PartidaController {
 
+    private static final String UUID_REGEX = 
+        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
+
     private final PartidaService partidaService;
     private final YamlRuleLoader yamlRuleLoader;
     private final PartidaRepository partidaRepository;
@@ -33,16 +36,15 @@ public class PartidaController {
 
     /**
      * Helper method to find a partida by ID (UUID) or name.
-     * First tries to parse as UUID, then falls back to name lookup.
+     * First checks if identifier matches UUID format, then falls back to name lookup.
      */
     private Optional<Partida> findPartidaByIdOrNombre(String identifier) {
-        try {
+        if (identifier != null && identifier.matches(UUID_REGEX)) {
             UUID uuid = UUID.fromString(identifier);
             return partidaRepository.findById(uuid);
-        } catch (IllegalArgumentException e) {
-            // Not a valid UUID, try to find by name
-            return partidaRepository.findByNombre(identifier);
         }
+        // Not a valid UUID format, try to find by name
+        return partidaRepository.findByNombre(identifier);
     }
 
     @PostMapping
