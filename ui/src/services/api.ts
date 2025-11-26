@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { IJugador as Jugador, IEquipo as Equipo } from '../types';
+import type { IJugador as Jugador, IEquipo as Equipo, PartidaState, ManoJugador } from '../types';
 
 const axiosInstance = axios.create({
     baseURL: '/api',
@@ -75,4 +75,57 @@ export const equipoService = {
         axiosInstance.post(`/equipos/${equipoId}/jugadores/${jugadorId}`),
     removerJugadorDeEquipo: (equipoId: string, jugadorId: string) =>
         axiosInstance.delete(`/equipos/${equipoId}/jugadores/${jugadorId}`)
+};
+
+// Game service for partida endpoints
+export const gameService = {
+    // Get partida state
+    obtenerPartida: (partidaId: string) =>
+        axiosInstance.get<PartidaState>(`/partidas/${partidaId}`),
+    
+    // Get player's hand and game state
+    obtenerMano: (partidaId: string, jugadorNombre: string) =>
+        axiosInstance.get<ManoJugador>(`/partidas/${partidaId}/mano`, {
+            params: { jugadorNombre }
+        }),
+    
+    // Play a card
+    jugarCarta: (partidaId: string, jugadorNombre: string, indiceCarta: number) =>
+        axiosInstance.post<string>(`/partidas/${partidaId}/jugar`, null, {
+            params: { jugadorNombre, indiceCarta }
+        }),
+    
+    // Call truco
+    cantarTruco: (partidaId: string, jugadorNombre: string) =>
+        axiosInstance.post<string>(`/partidas/${partidaId}/cantar/truco`, null, {
+            params: { jugadorNombre }
+        }),
+    
+    // Call envido
+    cantarEnvido: (partidaId: string, jugadorNombre: string) =>
+        axiosInstance.post<string>(`/partidas/${partidaId}/cantar/envido`, null, {
+            params: { jugadorNombre }
+        }),
+    
+    // Accept (querer)
+    querer: (partidaId: string, jugadorNombre: string) =>
+        axiosInstance.post<string>(`/partidas/${partidaId}/querer`, null, {
+            params: { jugadorNombre }
+        }),
+    
+    // Decline (no querer)
+    noQuerer: (partidaId: string, jugadorNombre: string) =>
+        axiosInstance.post<string>(`/partidas/${partidaId}/no-querer`, null, {
+            params: { jugadorNombre }
+        }),
+    
+    // Go to mazo
+    irseAlMazo: (partidaId: string, jugadorNombre: string) =>
+        axiosInstance.post<string>(`/partidas/${partidaId}/mazo`, null, {
+            params: { jugadorNombre }
+        }),
+    
+    // Create a new partida
+    crearPartida: (request: { jugadores: string[]; equiposAleatorios: boolean }) =>
+        axiosInstance.post<string>('/partidas', request)
 };

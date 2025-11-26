@@ -9,6 +9,8 @@ import org.fabiano.tfg.engine.model.team.Jugador;
 import org.fabiano.tfg.engine.repository.PartidaRepository;
 import org.fabiano.tfg.engine.service.PartidaService;
 import org.fabiano.tfg.engine.service.YamlRuleLoader;
+import org.fabiano.tfg.engine.websocket.GameWebSocketHandler;
+import org.fabiano.tfg.engine.websocket.WebSocketMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +29,7 @@ public class PartidaController {
     private final PartidaService partidaService;
     private final YamlRuleLoader yamlRuleLoader;
     private final PartidaRepository partidaRepository;
+    private final GameWebSocketHandler webSocketHandler;
 
     @PostMapping
     public ResponseEntity<UUID> crearPartida(@RequestBody CrearPartidaRequest request) {
@@ -79,6 +82,10 @@ public class PartidaController {
         partidaService.avanzarTurno(partida);
         partidaRepository.save(partida);
         log.info("Jugador {} cantó truco en partida {}", jugador.getNombre(), partida.getId());
+        
+        // Broadcast WebSocket update
+        broadcastGameUpdate(partida, WebSocketMessage.MessageType.TRUCO_CANTADO, jugador.getNombre());
+        
         return new ResponseEntity<>(jugador.getNombre() + " cantó truco", HttpStatus.OK);
     }
 
@@ -107,6 +114,10 @@ public class PartidaController {
         partidaService.avanzarTurno(partida);
         partidaRepository.save(partida);
         log.info("Jugador {} cantó envido en partida {}", jugador.getNombre(), partida.getId());
+        
+        // Broadcast WebSocket update
+        broadcastGameUpdate(partida, WebSocketMessage.MessageType.ENVIDO_CANTADO, jugador.getNombre());
+        
         return new ResponseEntity<>(jugador.getNombre() + " cantó envido", HttpStatus.OK);
     }
 
@@ -142,6 +153,13 @@ public class PartidaController {
             partidaRepository.save(partida);
             log.info("Jugador {} jugó carta {} en partida {}",
                     jugador.getNombre(), carta, partida.getId());
+            
+            // Broadcast WebSocket update
+            Map<String, Object> cartaJugadaInfo = new HashMap<>();
+            cartaJugadaInfo.put("jugador", jugador.getNombre());
+            cartaJugadaInfo.put("carta", carta);
+            broadcastGameUpdate(partida, WebSocketMessage.MessageType.CARTA_JUGADA, cartaJugadaInfo);
+            
             return new ResponseEntity<>(jugador.getNombre() + " jugó: " + carta, HttpStatus.OK);
         } catch (IllegalStateException e) {
             log.warn("Error al jugar carta: {}", e.getMessage());
@@ -173,6 +191,10 @@ public class PartidaController {
         partidaService.avanzarTurno(partida);
         partidaRepository.save(partida);
         log.info("Jugador {} quiso en partida {}", jugador.getNombre(), partida.getId());
+        
+        // Broadcast WebSocket update
+        broadcastGameUpdate(partida, WebSocketMessage.MessageType.QUISO, jugador.getNombre());
+        
         return new ResponseEntity<>(jugador.getNombre() + " quiso", HttpStatus.OK);
     }
 
@@ -200,6 +222,10 @@ public class PartidaController {
         partidaService.finalizarMano(partida);
         partidaRepository.save(partida);
         log.info("Jugador {} no quiso en partida {}", jugador.getNombre(), partida.getId());
+        
+        // Broadcast WebSocket update
+        broadcastGameUpdate(partida, WebSocketMessage.MessageType.NO_QUISO, jugador.getNombre());
+        
         return new ResponseEntity<>(jugador.getNombre() + " no quiso", HttpStatus.OK);
     }
 
@@ -227,6 +253,10 @@ public class PartidaController {
         partidaService.finalizarMano(partida);
         partidaRepository.save(partida);
         log.info("Jugador {} se fue al mazo en partida {}", jugador.getNombre(), partida.getId());
+        
+        // Broadcast WebSocket update
+        broadcastGameUpdate(partida, WebSocketMessage.MessageType.AL_MAZO, jugador.getNombre());
+        
         return new ResponseEntity<>(jugador.getNombre() + " se fue al mazo", HttpStatus.OK);
     }
 
@@ -267,5 +297,14 @@ public class PartidaController {
                 .filter(j -> j.getNombre().equalsIgnoreCase(nombre))
                 .findFirst()
                 .orElse(null);
+    }
+    
+    private void broadcastGameUpdate(Partida partida, WebSocketMessage.MessageType type, Object payload) {
+        WebSocketMessage message = WebSocketMessage.builder()
+                .type(type)
+                .payload(payload)
+                .partidaId(partida.getId().toString())
+                .build();
+        webSocketHandler.broadcastToPartida(partida.getId().toString(), message);
     }
 }
