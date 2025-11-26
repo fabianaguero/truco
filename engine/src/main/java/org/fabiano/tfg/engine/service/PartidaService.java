@@ -31,7 +31,12 @@ public class PartidaService {
     public Partida crearPartida(CrearPartidaRequest request) {
         List<Equipo> equipos = crearEquipos(request);
         Partida partida = new Partida();
-        partida.setId(UUID.randomUUID());
+        // Use the provided partidaId if available, otherwise generate a UUID-based string
+        String partidaId = request.getPartidaId();
+        if (partidaId == null || partidaId.trim().isEmpty()) {
+            partidaId = UUID.randomUUID().toString();
+        }
+        partida.setId(partidaId);
         partida.setEquipos(equipos);
         partida.setPuntajeLimite(30);
         partida.setCartasJugadas(new ArrayList<>());
@@ -75,7 +80,7 @@ public class PartidaService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Partida> obtenerPartida(UUID id) {
+    public Optional<Partida> obtenerPartida(String id) {
         return partidaRepository.findById(id);
     }
 

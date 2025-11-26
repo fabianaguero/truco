@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CrearPartidaRequest {
+    private String partidaId; // ID/nombre descriptivo de la partida (ej: "Batalla de truco de los viernes")
     private boolean equiposAleatorios;
     private List<String> jugadores; // Si equiposAleatorios == true
 

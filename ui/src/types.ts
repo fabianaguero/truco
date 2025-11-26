@@ -27,7 +27,7 @@ export interface Jugada {
   numeroRonda: number;
 }
 
-export type EstadoRonda = 'ESPERANDO_JUGADA' | 'TRUCO_CANTADO' | 'ENVIDO_CANTADO' | 'TERMINADA';
+export type EstadoRonda = 'ESPERANDO_JUGADA' | 'TRUCO_CANTADO' | 'ENVIDO_CANTADO' | 'TERMINADA' | 'EN_CURSO' | 'FINALIZADA';
 
 export interface PartidaState {
   id: string;
@@ -52,6 +52,19 @@ export interface ManoJugador {
   cartasJugadas: Jugada[];
   puntosEquipo1: number;
   puntosEquipo2: number;
+}
+
+// Request types
+export interface EquipoDTO {
+  nombre: string;
+  jugadores: string[];
+}
+
+export interface CrearPartidaRequest {
+  partidaId: string; // ID/name descriptivo de la partida (ej: "Batalla de truco de los viernes")
+  equiposAleatorios: boolean;
+  jugadores?: string[]; // Si equiposAleatorios == true
+  equipos?: EquipoDTO[]; // Si equiposAleatorios == false
 }
 
 // WebSocket message types
