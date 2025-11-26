@@ -119,6 +119,7 @@ public class PartidaService {
         partida.setAlMazo(false);
 
         partida.setCartasJugadas(new ArrayList<>());
+        partida.setGanadoresPorMano(new HashMap<>()); // Limpiar ganadores por vuelta
         partida.setGanadorDeRonda(null);
         partida.setPuntosEnJuego(1);
         partida.setValorTruco(1);
@@ -127,6 +128,11 @@ public class PartidaService {
 
     @Transactional
     public void registrarJugada(Partida partida, Jugador jugador, Carta carta) {
+        // Validar que es el turno del jugador
+        if (!partida.esTurnoDeJugador(jugador)) {
+            throw new IllegalStateException("No es el turno del jugador: " + jugador.getNombre());
+        }
+
         // Guardar la carta primero
         carta = cartaRepository.save(carta);
 
@@ -143,7 +149,13 @@ public class PartidaService {
 
         ruleLoader.ejecutarTodas(jugador, partida);
 
-        if (partida.getCartasJugadas().size() % partida.getEquipos().size() == 0) {
+        // Avanzar el turno después de jugar
+        avanzarTurno(partida);
+
+        // Resolver la ronda cuando todos los jugadores jugaron una carta
+        int totalJugadores = partida.getTotalJugadores();
+        List<Jugada> jugadasRondaActual = partida.getCartasJugadasEnVueltaActual();
+        if (jugadasRondaActual.size() == totalJugadores) {
             resolverRonda(partida);
         }
 
@@ -152,17 +164,27 @@ public class PartidaService {
 
     @Transactional
     public void avanzarTurno(Partida partida) {
+        if (partida.getOrdenDeTurno() == null || partida.getOrdenDeTurno().isEmpty()) {
+            return;
+        }
+
         Jugador jugadorActual = partida.getOrdenDeTurno().poll();
         partida.getOrdenDeTurno().offer(jugadorActual);
 
+        // Actualizar el índice de turno para persistencia
+        int nuevoIndice = (partida.getIndiceTurnoActual() + 1) % partida.getTotalJugadores();
+        partida.setIndiceTurnoActual(nuevoIndice);
+
         Jugador siguienteJugador = partida.getOrdenDeTurno().peek();
-        ruleLoader.ejecutarTodas(siguienteJugador, partida);
+        if (siguienteJugador != null) {
+            ruleLoader.ejecutarTodas(siguienteJugador, partida);
+        }
 
         partidaRepository.save(partida);
     }
 
     private void resolverRonda(Partida partida) {
-        List<Jugada> jugadasRonda = obtenerJugadasUltimaRonda(partida);
+        List<Jugada> jugadasRonda = partida.getCartasJugadasEnVueltaActual();
         if (jugadasRonda.isEmpty()) return;
 
         Jugada jugadaGanadora = jugadasRonda.stream()
@@ -179,18 +201,80 @@ public class PartidaService {
             if (jugador != null) {
                 Equipo equipoGanador = encontrarEquipoDeJugador(partida, jugador);
                 partida.setGanadorDeRonda(equipoGanador);
-                log.info("Ganador de la ronda: {} con {}",
+                partida.getGanadoresPorMano().put(partida.getVuelta(), equipoGanador.getId());
+                log.info("Ganador de la vuelta {}: {} con {}",
+                        partida.getVuelta(),
                         nombreJugador,
                         jugadaGanadora.getCarta());
             }
         }
 
+        // Avanzar a la siguiente vuelta
+        partida.setVuelta(partida.getVuelta() + 1);
+
         for (Jugador jugador : obtenerTodosLosJugadores(partida)) {
             ruleLoader.ejecutarTodas(jugador, partida);
         }
 
-        if (partida.getGanadorDeRonda() != null) {
-            asignarPuntos(partida);
+        // Verificar si terminó la mano (3 vueltas o un equipo ganó 2)
+        if (debeFinalizarMano(partida)) {
+            asignarPuntosMano(partida);
+        }
+    }
+
+    /**
+     * Determina si la mano debe finalizar (un equipo ganó 2 vueltas o se jugaron 3).
+     */
+    private boolean debeFinalizarMano(Partida partida) {
+        Map<UUID, Integer> victoriasPorEquipo = new HashMap<>();
+
+        for (UUID equipoId : partida.getGanadoresPorMano().values()) {
+            victoriasPorEquipo.merge(equipoId, 1, Integer::sum);
+        }
+
+        // Si algún equipo tiene 2 victorias, termina la mano
+        boolean algunEquipoGanoDos = victoriasPorEquipo.values().stream()
+                .anyMatch(v -> v >= 2);
+
+        // O si ya se jugaron 3 vueltas
+        boolean seJugaronTresVueltas = partida.getVuelta() > 3;
+
+        return algunEquipoGanoDos || seJugaronTresVueltas;
+    }
+
+    /**
+     * Asigna los puntos al equipo que ganó la mano.
+     */
+    private void asignarPuntosMano(Partida partida) {
+        // Contar victorias por equipo
+        Map<UUID, Integer> victoriasPorEquipo = new HashMap<>();
+        for (UUID equipoId : partida.getGanadoresPorMano().values()) {
+            victoriasPorEquipo.merge(equipoId, 1, Integer::sum);
+        }
+
+        // Encontrar el equipo con más victorias
+        UUID equipoGanadorId = victoriasPorEquipo.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+
+        if (equipoGanadorId != null) {
+            Equipo equipoGanador = partida.getEquipos().stream()
+                    .filter(e -> e.getId().equals(equipoGanadorId))
+                    .findFirst()
+                    .orElse(null);
+
+            if (equipoGanador != null) {
+                partida.setGanadorDeRonda(equipoGanador);
+                asignarPuntos(partida);
+
+                if (verificarFinPartida(partida)) {
+                    partida.setEstadoRonda(EstadoRonda.FINALIZADA);
+                    log.info("¡Partida finalizada! Ganador: {}", equipoGanador.getNombre());
+                } else {
+                    iniciarNuevaMano(partida);
+                }
+            }
         }
     }
 
@@ -224,6 +308,34 @@ public class PartidaService {
             }
         }
         partida.setOrdenDeTurno(orden);
+        partida.setIndiceTurnoActual(0);
+    }
+
+    /**
+     * Reconstruye el orden de turno desde los equipos y el índice guardado.
+     * Útil cuando se carga una partida desde la BD.
+     */
+    public void reconstruirOrdenDeTurno(Partida partida) {
+        if (partida.getOrdenDeTurno() != null && !partida.getOrdenDeTurno().isEmpty()) {
+            return; // Ya está inicializado
+        }
+
+        Queue<Jugador> orden = new LinkedList<>();
+        for (int i = 0; i < 2; i++) {
+            for (Equipo equipo : partida.getEquipos()) {
+                if (equipo.getJugadores().size() > i) {
+                    orden.add(equipo.getJugadores().get(i));
+                }
+            }
+        }
+
+        // Rotar hasta el índice guardado
+        for (int i = 0; i < partida.getIndiceTurnoActual(); i++) {
+            Jugador j = orden.poll();
+            orden.offer(j);
+        }
+
+        partida.setOrdenDeTurno(orden);
     }
 
     @Transactional
@@ -250,12 +362,6 @@ public class PartidaService {
     private boolean verificarFinPartida(Partida partida) {
         return partida.getEquipos().stream()
                 .anyMatch(e -> e.getPuntaje() >= partida.getPuntajeLimite());
-    }
-
-    private List<Jugada> obtenerJugadasUltimaRonda(Partida partida) {
-        int inicio = partida.getCartasJugadas().size() - partida.getEquipos().size() * 2;
-        if (inicio < 0) inicio = 0;
-        return partida.getCartasJugadas().subList(inicio, partida.getCartasJugadas().size());
     }
 
     private Equipo encontrarEquipoDeJugador(Partida partida, Jugador jugador) {

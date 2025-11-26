@@ -105,8 +105,36 @@ class PartidaServiceTest {
 
         assertEquals(1, partida.getCartasJugadas().size());
         assertTrue(jugador.getMano().isEmpty());
-        verify(ruleLoader).ejecutarTodas(eq(jugador), eq(partida));
-        verify(partidaRepository).save(partida);
+        verify(ruleLoader, atLeast(1)).ejecutarTodas(eq(jugador), eq(partida));
+        verify(partidaRepository, atLeast(1)).save(partida);
+    }
+
+    @Test
+    void testRegistrarJugadaFueraDeturno() {
+        Partida partida = crearPartidaDePrueba();
+        // Jugador2 is second in turn, so should not be able to play first
+        Jugador jugador2 = partida.getEquipos().get(1).getJugadores().get(0);
+        Carta carta = new Carta(Palo.ESPADA, 1);
+        jugador2.setMano(new ArrayList<>(Collections.singletonList(carta)));
+
+        // Should throw IllegalStateException because it's not Jugador2's turn
+        assertThrows(IllegalStateException.class, () -> 
+            partidaService.registrarJugada(partida, jugador2, carta)
+        );
+    }
+
+    @Test
+    void testAvanzarTurno() {
+        Partida partida = crearPartidaDePrueba();
+        
+        // First player is Jugador1
+        assertEquals("Jugador1", partida.getJugadorActual().getNombre());
+        
+        partidaService.avanzarTurno(partida);
+        
+        // After advancing, it should be Jugador2's turn
+        assertEquals("Jugador2", partida.getJugadorActual().getNombre());
+        assertEquals(1, partida.getIndiceTurnoActual());
     }
 
     @Test
@@ -153,10 +181,12 @@ class PartidaServiceTest {
         partida.setId(UUID.randomUUID());
         partida.setEquipos(new ArrayList<>());
         partida.setCartasJugadas(new ArrayList<>());
-        partida.setOrdenDeTurno(new LinkedList<>());
         partida.setPuntajeLimite(30);
         partida.setEstadoRonda(EstadoRonda.EN_CURSO);
         partida.setPuntosPorEquipo(new HashMap<>());
+        partida.setGanadoresPorMano(new HashMap<>());
+        partida.setVuelta(1);
+        partida.setRonda(1);
 
         Jugador jugador1 = new Jugador("Jugador1", false, false, false, false, false,
                 false, false, false, false, false, false, false, 0, new ArrayList<>());
@@ -171,6 +201,13 @@ class PartidaServiceTest {
 
         partida.getEquipos().add(equipo1);
         partida.getEquipos().add(equipo2);
+
+        // Set up turn order - Jugador1 first
+        Queue<Jugador> ordenDeTurno = new LinkedList<>();
+        ordenDeTurno.add(jugador1);
+        ordenDeTurno.add(jugador2);
+        partida.setOrdenDeTurno(ordenDeTurno);
+        partida.setIndiceTurnoActual(0);
 
         return partida;
     }

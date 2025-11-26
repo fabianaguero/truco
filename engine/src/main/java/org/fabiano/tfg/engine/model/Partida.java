@@ -24,6 +24,9 @@ public class Partida {
     @Transient
     private Queue<Jugador> ordenDeTurno;
 
+    // Índice del jugador actual en el turno (para persistencia)
+    private int indiceTurnoActual = 0;
+
     private int puntajeLimite = 30;
     private int manoActual = 0;
     private int ronda = 1;
@@ -90,5 +93,32 @@ public class Partida {
 
     public boolean esUltimaCartaDeLaVuelta() {
         return getCartasJugadasEnVueltaActual().size() == 4;
+    }
+
+    /**
+     * Obtiene el número total de jugadores en la partida.
+     */
+    public int getTotalJugadores() {
+        return equipos.stream()
+                .mapToInt(e -> e.getJugadores().size())
+                .sum();
+    }
+
+    /**
+     * Obtiene el jugador que tiene el turno actual.
+     */
+    public Jugador getJugadorActual() {
+        if (ordenDeTurno != null && !ordenDeTurno.isEmpty()) {
+            return ordenDeTurno.peek();
+        }
+        return null;
+    }
+
+    /**
+     * Verifica si es el turno del jugador especificado.
+     */
+    public boolean esTurnoDeJugador(Jugador jugador) {
+        Jugador actual = getJugadorActual();
+        return actual != null && actual.getNombre().equalsIgnoreCase(jugador.getNombre());
     }
 }
