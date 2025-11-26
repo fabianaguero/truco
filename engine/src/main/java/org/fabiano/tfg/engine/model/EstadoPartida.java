@@ -20,7 +20,7 @@ public class EstadoPartida {
     private EstadoRonda estado;
 
     public EstadoPartida(Partida partida) {
-        this.id = partida.getId();
+        this.id = partida.getId() != null ? partida.getId().toString() : null;
         this.equipos = partida.getEquipos().stream()
                 .map(EquipoEstadoDTO::new)
                 .collect(Collectors.toList());

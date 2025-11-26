@@ -16,7 +16,8 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public class Partida {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Equipo> equipos;
