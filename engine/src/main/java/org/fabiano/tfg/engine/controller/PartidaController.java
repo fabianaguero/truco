@@ -38,6 +38,10 @@ public class PartidaController {
         }
         try {
             Partida partida = partidaService.crearPartida(request);
+            if (partida.getId() == null) {
+                log.error("Partida created but ID was not generated");
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
             log.info("Partida creada con ID: {}", partida.getId());
             return new ResponseEntity<>(partida.getId().toString(), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
