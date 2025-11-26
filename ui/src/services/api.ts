@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { IJugador as Jugador, IEquipo as Equipo, PartidaState, ManoJugador } from '../types';
+import type { IJugador as Jugador, IEquipo as Equipo, PartidaState, ManoJugador, CrearPartidaRequest } from '../types';
 
 const axiosInstance = axios.create({
     baseURL: '/api',
@@ -126,6 +126,6 @@ export const gameService = {
         }),
     
     // Create a new partida
-    crearPartida: (request: { jugadores: string[]; equiposAleatorios: boolean }) =>
+    crearPartida: (request: CrearPartidaRequest) =>
         axiosInstance.post<string>('/partidas', request)
 };

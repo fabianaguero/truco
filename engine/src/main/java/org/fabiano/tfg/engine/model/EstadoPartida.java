@@ -5,7 +5,6 @@ import org.fabiano.tfg.engine.model.team.Equipo;
 import org.fabiano.tfg.engine.model.team.Jugador;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -13,7 +12,7 @@ import java.util.stream.Collectors;
  */
 @Data
 public class EstadoPartida {
-    private UUID id;
+    private String id;
     private List<EquipoEstadoDTO> equipos;
     private String jugadorActual;
     private int ronda;

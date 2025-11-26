@@ -12,10 +12,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface PartidaRepository extends JpaRepository<Partida, UUID> {
+public interface PartidaRepository extends JpaRepository<Partida, String> {
 
     @Query("SELECT p FROM Partida p LEFT JOIN FETCH p.equipos e LEFT JOIN FETCH e.jugadores WHERE p.id = :id")
-    Optional<Partida> findByIdWithEquipos(@Param("id") UUID id);
+    Optional<Partida> findByIdWithEquipos(@Param("id") String id);
 
     @Query("SELECT p FROM Partida p WHERE p.estadoRonda = 'EN_CURSO'")
     List<Partida> findPartidasEnCurso();
@@ -30,7 +30,7 @@ public interface PartidaRepository extends JpaRepository<Partida, UUID> {
             "LEFT JOIN p.equipos e " +
             "LEFT JOIN e.jugadores j " +
             "WHERE p.id = :id AND j.nombre = :nombreJugador")
-    boolean existsJugadorEnPartida(@Param("id") UUID id, @Param("nombreJugador") String nombreJugador);
+    boolean existsJugadorEnPartida(@Param("id") String id, @Param("nombreJugador") String nombreJugador);
 
     @Query("SELECT p FROM Partida p " +
             "WHERE p.manoActual > 0 " +
