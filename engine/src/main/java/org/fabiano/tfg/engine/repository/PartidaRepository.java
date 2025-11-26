@@ -51,6 +51,9 @@ public interface PartidaRepository extends JpaRepository<Partida, UUID> {
     @Query("DELETE FROM Partida p WHERE p.version < :versionLimite")
     void limpiarPartidasAntiguas(@Param("versionLimite") Long versionLimite);
 
+    // Find by human-readable name
+    Optional<Partida> findByNombre(String nombre);
+
     // Métodos heredados de JpaRepository que ya están disponibles:
     // save(Partida)
     // findById(UUID)

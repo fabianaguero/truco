@@ -19,6 +19,10 @@ public class Partida {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    // Human-readable name for the partida (e.g., "Batalla de truco de los viernes")
+    @Column(unique = true)
+    private String nombre;
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Equipo> equipos;
 
