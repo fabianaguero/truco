@@ -26,10 +26,26 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PartidaController {
 
+    private static final String UUID_REGEX = 
+        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
+
     private final PartidaService partidaService;
     private final YamlRuleLoader yamlRuleLoader;
     private final PartidaRepository partidaRepository;
     private final GameWebSocketHandler webSocketHandler;
+
+    /**
+     * Helper method to find a partida by ID (UUID) or name.
+     * First checks if identifier matches UUID format, then falls back to name lookup.
+     */
+    private Optional<Partida> findPartidaByIdOrNombre(String identifier) {
+        if (identifier != null && identifier.matches(UUID_REGEX)) {
+            UUID uuid = UUID.fromString(identifier);
+            return partidaRepository.findById(uuid);
+        }
+        // Not a valid UUID format, try to find by name
+        return partidaRepository.findByNombre(identifier);
+    }
 
     @PostMapping
     public ResponseEntity<String> crearPartida(@RequestBody CrearPartidaRequest request) {
@@ -42,16 +58,18 @@ public class PartidaController {
                 log.error("Partida created but ID was not generated");
                 return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
-            log.info("Partida creada con ID: {}", partida.getId());
-            return new ResponseEntity<>(partida.getId().toString(), HttpStatus.OK);
+            log.info("Partida creada con ID: {} y nombre: {}", partida.getId(), partida.getNombre());
+            // Return the name if provided, otherwise return the UUID
+            String responseId = partida.getNombre() != null ? partida.getNombre() : partida.getId().toString();
+            return new ResponseEntity<>(responseId, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Partida> obtenerPartida(@PathVariable UUID id) {
-        Optional<Partida> partidaOpt = partidaRepository.findById(id);
+    public ResponseEntity<Partida> obtenerPartida(@PathVariable String id) {
+        Optional<Partida> partidaOpt = findPartidaByIdOrNombre(id);
         if (partidaOpt.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -62,8 +80,8 @@ public class PartidaController {
     }
 
     @PostMapping("/{id}/cantar/truco")
-    public ResponseEntity<String> cantarTruco(@PathVariable UUID id, @RequestParam String jugadorNombre) {
-        Optional<Partida> partidaOpt = partidaRepository.findById(id);
+    public ResponseEntity<String> cantarTruco(@PathVariable String id, @RequestParam String jugadorNombre) {
+        Optional<Partida> partidaOpt = findPartidaByIdOrNombre(id);
         if (partidaOpt.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -94,8 +112,8 @@ public class PartidaController {
     }
 
     @PostMapping("/{id}/cantar/envido")
-    public ResponseEntity<String> cantarEnvido(@PathVariable UUID id, @RequestParam String jugadorNombre) {
-        Optional<Partida> partidaOpt = partidaRepository.findById(id);
+    public ResponseEntity<String> cantarEnvido(@PathVariable String id, @RequestParam String jugadorNombre) {
+        Optional<Partida> partidaOpt = findPartidaByIdOrNombre(id);
         if (partidaOpt.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -127,10 +145,10 @@ public class PartidaController {
 
     @PostMapping("/{id}/jugar")
     public ResponseEntity<String> jugarCarta(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestParam String jugadorNombre,
             @RequestParam int indiceCarta) {
-        Optional<Partida> partidaOpt = partidaRepository.findById(id);
+        Optional<Partida> partidaOpt = findPartidaByIdOrNombre(id);
         if (partidaOpt.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -172,8 +190,8 @@ public class PartidaController {
     }
 
     @PostMapping("/{id}/querer")
-    public ResponseEntity<String> querer(@PathVariable UUID id, @RequestParam String jugadorNombre) {
-        Optional<Partida> partidaOpt = partidaRepository.findById(id);
+    public ResponseEntity<String> querer(@PathVariable String id, @RequestParam String jugadorNombre) {
+        Optional<Partida> partidaOpt = findPartidaByIdOrNombre(id);
         if (partidaOpt.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -203,8 +221,8 @@ public class PartidaController {
     }
 
     @PostMapping("/{id}/no-querer")
-    public ResponseEntity<String> noQuerer(@PathVariable UUID id, @RequestParam String jugadorNombre) {
-        Optional<Partida> partidaOpt = partidaRepository.findById(id);
+    public ResponseEntity<String> noQuerer(@PathVariable String id, @RequestParam String jugadorNombre) {
+        Optional<Partida> partidaOpt = findPartidaByIdOrNombre(id);
         if (partidaOpt.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -234,8 +252,8 @@ public class PartidaController {
     }
 
     @PostMapping("/{id}/mazo")
-    public ResponseEntity<String> irseAlMazo(@PathVariable UUID id, @RequestParam String jugadorNombre) {
-        Optional<Partida> partidaOpt = partidaRepository.findById(id);
+    public ResponseEntity<String> irseAlMazo(@PathVariable String id, @RequestParam String jugadorNombre) {
+        Optional<Partida> partidaOpt = findPartidaByIdOrNombre(id);
         if (partidaOpt.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -266,9 +284,9 @@ public class PartidaController {
 
     @GetMapping("/{id}/mano")
     public ResponseEntity<?> obtenerManoJugador(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestParam String jugadorNombre) {
-        Optional<Partida> partidaOpt = partidaRepository.findById(id);
+        Optional<Partida> partidaOpt = findPartidaByIdOrNombre(id);
         if (partidaOpt.isEmpty()) {
             return new ResponseEntity<>("Partida no encontrada", HttpStatus.NOT_FOUND);
         }
